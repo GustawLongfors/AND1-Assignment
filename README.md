@@ -3,6 +3,7 @@
 Description
 
 I make a game, because i like making games. 
+Game is Chess,
 
 On a more serious note - The application will be a game (exactly what type is still undecided), with multiplayer support and other features of this nature.
 All assets used will be CC0 licensed. Hopefully.
@@ -16,15 +17,15 @@ Motivation - I enjoy making games, and have made some unfinished ones in the pas
 MoSCoW Requirements
 
 The Project must include :
- - A functional game
+ - A functional chess game (main menu, chess view, chess logic)
 
 The Project should include :
-- Functioning multiplayer with either P2P or server-based matchmaking.
-- A highscore system, preferably hosted on a cloud service
-- Enjoyable gameplay
+- A matchmaking system via Firebase
+- A fast chess gamemode 
 
 The Project could include :
- - Expansive level design, a lot of content etc
+ - Check-Mate etc solvers
+ - Pat (probably wont tho)
 
 The Project wont include :
-  - Good netcode
+  - An ELO system 
