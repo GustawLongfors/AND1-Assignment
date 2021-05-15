@@ -3,7 +3,8 @@
 Description
 
 I make a game, because i like making games. 
-Game is Chess,
+Game chosen is Chess.
+
 
 On a more serious note - The application will be a game (exactly what type is still undecided), with multiplayer support and other features of this nature.
 All assets used will be CC0 licensed. Hopefully.
