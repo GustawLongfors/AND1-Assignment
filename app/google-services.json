@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1096880202622",
+    "project_id": "andi-chess-gl",
+    "storage_bucket": "andi-chess-gl.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1096880202622:android:e51c2a631de81b6fc0c92f",
+        "android_client_info": {
+          "package_name": "com.example.andichess"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1096880202622-v0vgfd70lvdjcd4dkrpcoca9vhpdl6hk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbdNgOaa6dFURMV--KVhPgqRvvA3196Dw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1096880202622-v0vgfd70lvdjcd4dkrpcoca9vhpdl6hk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
