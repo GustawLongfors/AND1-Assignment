@@ -21,7 +21,7 @@ import java.util.List;
 public class ChessLobbyActivity extends AppCompatActivity {
 
     ListView listView;
-    Button button;
+    Button buttonCreateLobby;
 
     List<String> sessionList;
     String playerName = "";
@@ -41,18 +41,18 @@ public class ChessLobbyActivity extends AppCompatActivity {
         playerName = prefs.getString("playerName", "");
         sessionName = playerName;
         listView = findViewById(R.id.sessionList);
-        button = findViewById(R.id.buttonCreateSession);
+        buttonCreateLobby = findViewById(R.id.buttonCreateSession);
 
         sessionList = new ArrayList<>();
 
-        button.setOnClickListener(new View.OnClickListener() {
+        buttonCreateLobby.setOnClickListener(new View.OnClickListener() {
             // create room and add yourself as player2
             @Override
             public void onClick(View v) {
-                button.setText("Create Session");
-                button.setEnabled(false);
+                buttonCreateLobby.setText("Create Session");
+                buttonCreateLobby.setEnabled(false);
                 sessionName = playerName;
-                sessionRef = database.getReference("chess/sessions/" + sessionName + "/player1");
+                sessionRef = database.getReference("chess/" + sessionName + "/player1");
                 addSessionEventListener();
                 sessionRef.setValue(playerName);
             }
@@ -63,7 +63,7 @@ public class ChessLobbyActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 sessionName = sessionList.get(position);
-                sessionRef = database.getReference("chess/sessions/" + sessionName + "/player2");
+                sessionRef = database.getReference("chess/" + sessionName + "/player2");
                 addSessionEventListener();
                 sessionRef.setValue(playerName);
             }
@@ -76,8 +76,8 @@ public class ChessLobbyActivity extends AppCompatActivity {
         sessionRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                button.setText("Create Session");
-                button.setEnabled(false);
+                buttonCreateLobby.setText("Create Session");
+                buttonCreateLobby.setEnabled(false);
                 Intent intent = new Intent(getApplicationContext(), ChessGameActivity.class);
                 intent.putExtra("sessionName", sessionName);
                 startActivity(intent);
@@ -85,8 +85,8 @@ public class ChessLobbyActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                button.setText("Create Session");
-                button.setEnabled(false);
+                buttonCreateLobby.setText("Create Session");
+                buttonCreateLobby.setEnabled(false);
                 Toast.makeText(ChessLobbyActivity.this, "Error Creating Session", Toast.LENGTH_SHORT).show();
             }
         });
@@ -106,7 +106,6 @@ public class ChessLobbyActivity extends AppCompatActivity {
                     listView.setAdapter(adapter);
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 //nada, here be errors

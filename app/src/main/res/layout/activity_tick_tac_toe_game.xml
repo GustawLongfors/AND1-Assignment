@@ -1,9 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".TickTacToeGameActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <ImageButton
+        android:id="@+id/buttonTTT1"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        app:srcCompat="@drawable/ic_launcher_foreground"
+        android:layout_toLeftOf="@id/buttonTTT2"
+        android:layout_above="@id/buttonTTT5" />
+
+    <ImageButton
+        android:id="@+id/buttonTTT2"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_above="@id/buttonTTT5"
+        android:layout_centerInParent="true"
+        app:srcCompat="@drawable/ic_launcher_foreground" />
+
+    <ImageButton
+        android:id="@+id/buttonTTT3"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_above="@id/buttonTTT5"
+        android:layout_toRightOf="@id/buttonTTT2"
+        app:srcCompat="@drawable/ic_launcher_foreground" />
+
+    <ImageButton
+        android:id="@+id/buttonTTT4"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_toLeftOf="@id/buttonTTT5"
+        android:layout_centerInParent="true"
+        app:srcCompat="@drawable/ic_launcher_foreground" />
+
+    <ImageButton
+        android:id="@+id/buttonTTT5"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_centerInParent="true"
+        app:srcCompat="@drawable/ic_launcher_foreground" />
+
+    <ImageButton
+        android:id="@+id/buttonTTT6"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_toRightOf="@id/buttonTTT5"
+        android:layout_centerInParent="true"
+        app:srcCompat="@drawable/ic_launcher_foreground" />
+
+    <ImageButton
+        android:id="@+id/buttonTTT7"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_toLeftOf="@id/buttonTTT8"
+        android:layout_below="@id/buttonTTT5"
+        app:srcCompat="@drawable/ic_launcher_foreground" />
+
+    <ImageButton
+        android:id="@+id/buttonTTT8"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_below="@id/buttonTTT5"
+        android:layout_centerInParent="true"
+        app:srcCompat="@drawable/ic_launcher_foreground" />
+
+
+    <ImageButton
+        android:id="@+id/buttonTTT9"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_toRightOf="@id/buttonTTT8"
+        android:layout_below="@id/buttonTTT5"
+        app:srcCompat="@drawable/ic_launcher_foreground" />
+
+
+    <TextView
+        android:id="@+id/player1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonTTT5"
+        android:layout_marginBottom="200dp"
+        android:layout_marginLeft="105dp"
+        android:text="Player1" />
+
+    <TextView
+        android:id="@+id/player2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonTTT5"
+        android:layout_marginBottom="200dp"
+        android:layout_marginLeft="250dp"
+        android:text="Player2" />
+
+    <TextView
+        android:id="@+id/textViewP1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/player1"
+        android:layout_marginLeft="105dp"
+        android:text="TextView" />
+
+    <TextView
+        android:id="@+id/textViewP2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/player2"
+        android:layout_marginLeft="250dp"
+        android:text="TextView" />
+
+    <Button
+        android:id="@+id/buttonTTTQuit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="650dp"
+        android:text="Quit" />
+
+</RelativeLayout>

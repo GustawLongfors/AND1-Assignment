@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "1096880202622",
+    "firebase_url": "https://andi-chess-gl-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "andi-chess-gl",
     "storage_bucket": "andi-chess-gl.appspot.com"
   },

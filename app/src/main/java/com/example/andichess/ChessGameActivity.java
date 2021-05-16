@@ -60,7 +60,7 @@ public class ChessGameActivity extends AppCompatActivity {
             }
         });
 
-        chessRef = database.getReference("sessions/" + sessionName + "/messages");
+        chessRef = database.getReference("chess/" + sessionName + "/messages");
         message = role + "Poked!";
         chessRef.setValue(message);
         addSessionEventListener();
