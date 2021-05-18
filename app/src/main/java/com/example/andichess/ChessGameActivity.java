@@ -35,13 +35,17 @@ public class ChessGameActivity extends AppCompatActivity {
     FirebaseDatabase database;
     DatabaseReference chessRef;
 
+    boolean t;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        chessboard = new Chessboard(this);
+        chessboard = new Chessboard(this, sessionName);
         setContentView(chessboard);
+
+        t = true;
 
         if (sessionName.equals(playerName)) {
             role = "white";
@@ -59,9 +63,36 @@ public class ChessGameActivity extends AppCompatActivity {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             Toast.makeText(ChessGameActivity.this, "Haha you are observer", Toast.LENGTH_LONG).show();
         }
+
+        // disgusting piece of code but i cant figure out a different solution because head is hurt
+        while(t) {
+            if(chessboard.whiteTurn) {
+                if(role.equals("white")) {
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                    Toast.makeText(ChessGameActivity.this, "Your turn", Toast.LENGTH_SHORT).show();
+                }
+                else if(role.equals("black")) {
+                    getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                }
+            }
+            // !chessboard.whiteTurn
+            else {
+                if(role.equals("white")) {
+                    getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                }
+                else if(role.equals("black")) {
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                    Toast.makeText(ChessGameActivity.this, "Your turn", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            if(!chessboard.gameOn) {
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            }
+        }
     }
 
-    
+    // probably useless code but i keep it because i like it
 
     /*
 
