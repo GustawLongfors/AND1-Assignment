@@ -9,11 +9,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.example.andichess.chess.Chessboard;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import android.app.Activity;
+import android.view.Window;
+import android.os.Bundle;
+import android.view.WindowManager;
 
 public class ChessGameActivity extends AppCompatActivity {
 
@@ -24,13 +30,40 @@ public class ChessGameActivity extends AppCompatActivity {
     String role = "";
     String message = "";
 
+    Chessboard chessboard;
+
     FirebaseDatabase database;
     DatabaseReference chessRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chess_game);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        chessboard = new Chessboard(this);
+        setContentView(chessboard);
+
+        if (sessionName.equals(playerName)) {
+            role = "white";
+            Toast.makeText(ChessGameActivity.this, "You are white, move first", Toast.LENGTH_LONG).show();
+        }
+        else {
+            role = "black";
+        }
+
+        if(role.equals("black")) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            Toast.makeText(ChessGameActivity.this, "Waiting For White Move", Toast.LENGTH_LONG).show();
+        }
+        else if(role.equals("OBS")) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            Toast.makeText(ChessGameActivity.this, "Haha you are observer", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    
+
+    /*
 
         button = findViewById(R.id.chessButton);
         button.setEnabled(false);
@@ -90,4 +123,6 @@ public class ChessGameActivity extends AppCompatActivity {
             }
         });
     }
+
+     */
 }

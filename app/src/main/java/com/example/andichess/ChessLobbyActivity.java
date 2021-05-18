@@ -78,7 +78,7 @@ public class ChessLobbyActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 buttonCreateLobby.setText("Create Session");
                 buttonCreateLobby.setEnabled(false);
-                Intent intent = new Intent(getApplicationContext(), ChessGameActivity.class);
+                Intent intent = new Intent(getApplicationContext(), CheckersGameActivity.class);
                 intent.putExtra("sessionName", sessionName);
                 startActivity(intent);
             }

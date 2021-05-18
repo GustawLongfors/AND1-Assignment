@@ -9,7 +9,9 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+
 import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 
 import com.example.andichess.R;
@@ -51,8 +53,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
     }
 
     @Override
-    public void surfaceCreated(@NonNull SurfaceHolder holder)
-    {
+    public void surfaceCreated(@NonNull SurfaceHolder holder) {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inScaled = false;
 
@@ -700,7 +701,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
     {
         if (!gameOn)
         {
-            canvas.drawText((whiteTurn ? "Black" : "White") + " Win!",
+            canvas.drawText((whiteTurn ? "Black" : "White") + " Wins!",
                     3*CharacterSprite.size, 13*CharacterSprite.size, textPaint);
             return;
         }

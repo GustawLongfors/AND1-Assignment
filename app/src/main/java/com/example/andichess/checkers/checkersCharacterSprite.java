@@ -1,21 +1,23 @@
-package com.example.andichess.chess;
+package com.example.andichess.checkers;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
+import com.example.andichess.chess.CharacterSprite;
+import com.example.andichess.chess.objType;
 
-public class CharacterSprite {
+public class checkersCharacterSprite {
 
     private final Bitmap image;
     private int x;
     private int y;
-    private final objType type;
+    private final objTypeCheckers type;
     public static final int size = 110;
     private boolean moved;
     private boolean visible;
-    private final int points;
+    private int points;
 
-    public CharacterSprite(Bitmap bmp, int x, int y, objType type) {
+    public checkersCharacterSprite(Bitmap bmp, int x, int y, objTypeCheckers type) {
         image = bmp;
         this.x = x;
         this.y = y;
@@ -23,31 +25,18 @@ public class CharacterSprite {
         moved = false;
         visible = true;
         switch (type) {
-            case PAWN_BLACK:
-            case PAWN_WHITE:
+            case MAN_BLACK:
+            case MAN_RED:
                 points = 1;
                 break;
-            case KNIGHT_BLACK:
-            case KNIGHT_WHITE:
-            case BISHOP_WHITE:
-            case BISHOP_BLACK:
+            case KING_BLACK:
+            case KING_RED:
                 points = 3;
-                break;
-            case ROOK_BLACK:
-            case ROOK_WHITE:
-                points = 5;
-                break;
-            case QUEEN_BLACK:
-            case QUEEN_WHITE:
-                points = 9;
-                break;
-            default:
-                points = 0;
                 break;
         }
     }
 
-    public CharacterSprite(Bitmap bmp, int x, int y, objType type, int points) {
+    public checkersCharacterSprite(Bitmap bmp, int x, int y, objTypeCheckers type, int points) {
         image = bmp;
         this.x = x;
         this.y = y;
@@ -70,12 +59,11 @@ public class CharacterSprite {
         return x >= this.x && x < this.x + size && y >= this.y && y < this.y + size;
     }
 
-    public boolean isWhite() {
-        return type == objType.PAWN_WHITE || type == objType.QUEEN_WHITE || type == objType.BISHOP_WHITE
-                || type == objType.KING_WHITE || type == objType.KNIGHT_WHITE || type == objType.ROOK_WHITE;
+    public boolean isBlack() {
+        return type == objTypeCheckers.MAN_BLACK || type == objTypeCheckers.KING_BLACK;
     }
 
-    public objType getType() { return type; }
+    public objTypeCheckers getType() {return type; }
 
     public void setVisible(boolean visible) { this.visible = visible; }
 
