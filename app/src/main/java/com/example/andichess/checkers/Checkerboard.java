@@ -164,7 +164,54 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        return  false;
+        if (!gameOn) return false;
+
+        if (selectedObject != null) {
+            // We clicked while having a piece already chosen, check if we can move here
+            checkersCharacterSprite newSelectedObject = null;
+            for (checkersCharacterSprite sprite : pieces) {
+                if (sprite.isColliding((int) event.getX(), (int) event.getY())) {
+                    // Newly selected object is another piece
+                    newSelectedObject = sprite;
+                    break;
+                }
+            }
+            if (newSelectedObject == null) {
+                for (checkersCharacterSprite sprite : board) {
+                    if (sprite.isColliding((int) event.getX(), (int) event.getY())) {
+                        // Newly selected object is a field
+                        newSelectedObject = sprite;
+                        break;
+                    }
+                }
+            }
+            if (newSelectedObject == null) {
+                for (checkersCharacterSprite field : selected) {
+                    if (field.isColliding(selectedObject.getX(), selectedObject.getY())) {
+                        // User touched outside the board, deselecting previous field and quitting
+                        field.setVisible(false);
+                        selectedObject = null;
+                        break;
+                    }
+                }
+                return false;
+            }
+
+            int[] position = {selectedObject.getX() / CharacterSprite.size, selectedObject.getY() / CharacterSprite.size};
+            int[] destination = {newSelectedObject.getX() / CharacterSprite.size, newSelectedObject.getY() / CharacterSprite.size};
+            boolean moved = false; // if true then a correct move was performed
+            boolean isSomethingInTheWay = false;
+
+            // board positions, xy
+            // 11 21 31 41 51 61 71 81
+            // 12 22 32 42 52 62 72 82
+            // 13 23 33 43 53 63 73 83
+            // 14 24 34 44 54 64 74 84
+            // 15 25 35 45 55 65 75 85
+            // 16 26 36 46 56 66 76 86
+            // 17 27 37 47 57 67 77 87
+            // 18 28 38 48 58 68 78 88
+        }
     }
 
     private static void updateText(boolean blackTurn, int[] points, Canvas canvas, Paint textPaint, boolean gameOn) {
