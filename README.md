@@ -3,7 +3,7 @@
 Description
 
 I make a game, because i like making games. 
-Game chosen is Chess.
+App is a Multi-Game app (currently : Chess and Checkers)
 
 
 On a more serious note - The application will be a game (exactly what type is still undecided), with multiplayer support and other features of this nature.
