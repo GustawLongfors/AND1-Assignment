@@ -47,3 +47,17 @@ General:
 The Project wont include :
   - An ELO system 
   - Finished netowrking because firebase is awful for this instead of a dedicated server or P2P matchamking
+
+
+Singleplayer video - https://youtu.be/pGzxUavY77M
+
+NOT FULLY IMPLEMENTED (aka the wall of shame)
+
+Multiplayer. Because firebase is bad for that
+Checkers. Needs a  bit more time and would have been fine. Also need to download CC0 models for this.
+User removal from database. Not really hard but there were more pressing issued
+Check-Mate. 
+Music. Because .wav and .mp3 files are not recognised for no reason
+Nice-looking background. I am not an artist, and thus quite poor at visuals, i really like the blue + white, im sorry :#
+
+Hours Spent : Last Week - ~50h. Chess development during Easter ~180h. I hate my life. Why couldnt i do this in UE4 / Unity like a normal human, that i do not know.
