@@ -18,15 +18,30 @@ Motivation - I enjoy making games, and have made some unfinished ones in the pas
 MoSCoW Requirements
 
 The Project must include :
- - A functional chess game (main menu, chess view, chess logic)
+ - A functional chess game (main menu, chess view, majority of chess logic)
 
 The Project should include :
-- A matchmaking system via Firebase
-- A fast chess gamemode 
+- A matchmaking system via Firebase (dia via lobbies)
+- Functional Checkers
 
 The Project could include :
+Chess:
  - Check-Mate etc solvers
  - Pat (probably wont tho)
+ - Castleing logic with firebase support (this is a clownfiesta tbh)
+ 
+Checkers:
+ - Double take logic 
+ - Checkers -> specific graphics
+
+Multiplayer :
+- Full fledged lobby and player system
+- Google Authentication
+
+General:
+- Background Music
+- Sounds for moving pieces
 
 The Project wont include :
   - An ELO system 
+  - Finished netowrking because firebase is awful for this instead of a dedicated server or P2P matchamking
