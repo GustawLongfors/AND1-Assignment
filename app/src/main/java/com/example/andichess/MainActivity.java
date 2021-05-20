@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -32,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     FirebaseDatabase database;
     DatabaseReference databaseRef;
 
+    MediaPlayer musicBot;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,15 +50,8 @@ public class MainActivity extends AppCompatActivity {
         buttonCheckersLobby.setEnabled(false);
         buttonConfirmName = findViewById(R.id.buttonConfirmName);
 
-        // check for player existance
-       /*
-        SharedPreferences preferences = getSharedPreferences("PREFS", 0);
-        playerName = preferences.getString("playerName", "");
-        if (!playerName.equals("")) {
-            databaseRef = database.getReference("players/" + playerName);
-            databaseRef.setValue("");
-        }
-        */
+        musicBot = MediaPlayer.create(getApplicationContext(), R.raw.ambientElectronicCC0);
+
         buttonConfirmName.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -179,5 +175,11 @@ public class MainActivity extends AppCompatActivity {
                  */
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        musicBot.start();
     }
 }

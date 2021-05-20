@@ -13,6 +13,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicMarkableReference;
 
 import com.example.andichess.R;
 import com.google.firebase.database.DatabaseReference;
@@ -26,6 +27,8 @@ enum moveMode
 }
 
 public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, View.OnTouchListener {
+    private static String sessionName;
+    private static FirebaseDatabase database = FirebaseDatabase.getInstance();
     private final chessMainThread thread; // thread responsible for updating our screen
     private final ArrayList<CharacterSprite> board; // fields on a chessboard
     private final ArrayList<CharacterSprite> pieces;
@@ -36,9 +39,6 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
     public boolean gameOn; // if true chessboard responds to clicks
     private final Paint textPaint; // text display style (size and colour)
 
-    private String sessionName;
-
-    FirebaseDatabase database = FirebaseDatabase.getInstance();
 
     public Chessboard(Context context, String sn) {
         super(context);
@@ -134,6 +134,12 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
 
         thread.setRunning(true);
         thread.start();
+    }
+
+    public void sendMoveToDB(int[] position, int[] destination) {
+        String value = position[0] + "," + position[1] + "/" + destination[0] + "," + destination[1];
+        DatabaseReference dataRef = database.getReference("chess/" + sessionName + "/chessMove");
+        dataRef.setValue(value);
     }
 
     @Override
@@ -561,8 +567,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                                         boolean whiteTurn, int[] destination) {
         int[] result = new int[]{0, 0};
         for (CharacterSprite sprite : pieces) {
-            if (sprite.isColliding(destination[0] * CharacterSprite.size,
-                    destination[1] * CharacterSprite.size)) {
+            if (sprite.isColliding(destination[0] * CharacterSprite.size, destination[1] * CharacterSprite.size)) {
                 if (whiteTurn) {
                     if (sprite.isWhite()) {
                         return result;
@@ -582,6 +587,10 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
         selectedObject.setY(destination[1] * CharacterSprite.size);
         selectedObject.setMoved();
         result[0] = 1;
+        int[] position = new int[]{selectedObject.getX(), selectedObject.getY()};
+        String value = position[0] + "," + position[1] + "/" + (destination[0] * CharacterSprite.size) + "," + (destination[1] * CharacterSprite.size);
+        DatabaseReference dataRef = database.getReference("chess/" + sessionName + "/chessMove");
+        dataRef.setValue(value);
         return result;
     }
 
@@ -660,11 +669,5 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                 }
             }
         }
-    }
-
-    private void sendMoveToDB(int[] position, int[] destination) {
-        String value = position[0] + "," + position[1] + "/" + destination[0] + "," + destination[1];
-        DatabaseReference dataRef = database.getReference("chess/" + sessionName + "/chessMove");
-        dataRef.setValue(value);
     }
 }

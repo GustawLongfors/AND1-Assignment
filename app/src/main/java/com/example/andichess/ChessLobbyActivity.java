@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
@@ -31,6 +32,8 @@ public class ChessLobbyActivity extends AppCompatActivity {
     DatabaseReference sessionRef;
     DatabaseReference sessionsRef;
 
+    MediaPlayer musicBot;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +47,8 @@ public class ChessLobbyActivity extends AppCompatActivity {
         buttonCreateLobby = findViewById(R.id.buttonCreateSession);
 
         sessionList = new ArrayList<>();
+
+        musicBot = MediaPlayer.create(getApplicationContext(), R.raw.elevatorMusicCC0);
 
         buttonCreateLobby.setOnClickListener(new View.OnClickListener() {
             // create room and add yourself as player2
@@ -78,7 +83,7 @@ public class ChessLobbyActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 buttonCreateLobby.setText("Create Session");
                 buttonCreateLobby.setEnabled(false);
-                Intent intent = new Intent(getApplicationContext(), CheckersGameActivity.class);
+                Intent intent = new Intent(getApplicationContext(), ChessGameActivity.class);
                 intent.putExtra("sessionName", sessionName);
                 startActivity(intent);
             }
@@ -111,5 +116,11 @@ public class ChessLobbyActivity extends AppCompatActivity {
                 //nada, here be errors
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        musicBot.start();
     }
 }

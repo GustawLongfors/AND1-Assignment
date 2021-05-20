@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -35,6 +36,8 @@ public class ChessGameActivity extends AppCompatActivity {
     FirebaseDatabase database;
     DatabaseReference chessRef;
 
+    MediaPlayer musicBot;
+
     boolean t;
 
     @Override
@@ -44,6 +47,8 @@ public class ChessGameActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         chessboard = new Chessboard(this, sessionName);
         setContentView(chessboard);
+        
+        musicBot = MediaPlayer.create(getApplicationContext(), R.raw.Music1CC0);
 
         t = true;
 
@@ -90,6 +95,12 @@ public class ChessGameActivity extends AppCompatActivity {
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        musicBot.start();
     }
 
     // probably useless code but i keep it because i like it

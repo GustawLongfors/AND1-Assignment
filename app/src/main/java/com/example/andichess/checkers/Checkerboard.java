@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 
 import com.example.andichess.R;
 import com.example.andichess.chess.CharacterSprite;
+import com.example.andichess.chess.objType;
 
 import java.util.ArrayList;
 
@@ -75,14 +76,14 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
 
         for (int x = 1; x <= 4; x++) {
             pieces.add(new checkersCharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.pawn_black, o),
-                    110 * 2 *x, 110, objTypeCheckers.MAN_BLACK));
+                    110 * 2 * x, 110, objTypeCheckers.MAN_BLACK));
         }
 
         //  Black pieces added in for loop below = [110*1, 110 * 2], [110*3, 110 * 2], [110*5, 110 * 2], [110*7, 110 * 2]
 
         for (int x = 1; x <= 4; x++) {
             pieces.add(new checkersCharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.pawn_black, o),
-                    110 * (x * 2 - 1) , 110 * 2, objTypeCheckers.MAN_BLACK));
+                    110 * (x * 2 - 1), 110 * 2, objTypeCheckers.MAN_BLACK));
         }
 
         //  Black pieces added in for loop below = [110*2, 110 * 3], [110*4, 110 * 3], [110*6, 110 * 3], [110*8, 110 * 3]
@@ -105,7 +106,7 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
 
         for (int x = 1; x <= 4; x++) {
             pieces.add(new checkersCharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.pawn_white, o),
-                    110 * x * 2 , 110 * 7, objTypeCheckers.MAN_RED));
+                    110 * x * 2, 110 * 7, objTypeCheckers.MAN_RED));
         }
 
         //  Red pieces added in for loop below = [110*1, 110 * 8], [110*3, 110 * 8], [110*5, 110 * 8], [110*7, 110 * 8]
@@ -211,22 +212,191 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
             // 16 26 36 46 56 66 76 86
             // 17 27 37 47 57 67 77 87
             // 18 28 38 48 58 68 78 88
+
+            switch (selectedObject.getType()) {
+                case MAN_BLACK:
+                    if (destination[0] == position[0] && destination[1] == position[1] - 1) {
+                        if (!anyObstacles(pieces, position, destination, moveMode.DIAGONAL, false)) {
+                            int[] result = moveIfPossible(pieces, selectedObject, blackTurn, destination);
+                            moved = result[0] == 1;
+                            points[blackTurn ? 0 : 1] += result[1];
+                        }
+                        if (selectedObject.getY() == CharacterSprite.size * 8) {
+                            BitmapFactory.Options o = new BitmapFactory.Options();
+                            o.inScaled = false;
+                            pieces.add(new checkersCharacterSprite(BitmapFactory.decodeResource(getResources(),
+                                    R.drawable.king_black, o), selectedObject.getX(), 880, objTypeCheckers.KING_BLACK, 1));
+                            pieces.remove(selectedObject);
+                        }
+                        break;
+                    }
+                case MAN_RED:
+                    if (destination[0] == position[0] && destination[1] == position[1] + 1) {
+                        if (!anyObstacles(pieces, position, destination, moveMode.DIAGONAL, false)) {
+                            int[] result = moveIfPossible(pieces, selectedObject, blackTurn, destination);
+                            moved = result[0] == 1;
+                            points[blackTurn ? 0 : 1] += result[1];
+                        }
+                        if (selectedObject.getY() == CharacterSprite.size) {
+                            BitmapFactory.Options o = new BitmapFactory.Options();
+                            o.inScaled = false;
+                            pieces.add(new checkersCharacterSprite(BitmapFactory.decodeResource(getResources(),
+                                    R.drawable.king_white, o), selectedObject.getX(), 880, objTypeCheckers.KING_RED, 1));
+                            pieces.remove(selectedObject);
+                        }
+                        break;
+                    }
+                case KING_BLACK:
+                case KING_RED: {
+                    if (abs(destination[0] - position[0]) == abs(destination[1] - position[1])) {
+                        if (!anyObstacles(pieces, position, destination, moveMode.DIAGONAL, false)) {
+                            int[] result = moveIfPossible(pieces, selectedObject, blackTurn, destination);
+                            moved = result[0] == 1;
+                            points[blackTurn ? 0 : 1] += result[1];
+                        }
+                    }
+                    break;
+                }
+            }
+            for (checkersCharacterSprite field : selected) {
+                field.setVisible(false);
+            }
+            // Switch players if the correct move was performed
+            if (moved) {
+                blackTurn = !blackTurn;
+                // end game if mate
+                if (isWin(pieces, blackTurn)) {
+                    gameOn = false;
+                }
+            }
+            // Deselect object
+            selectedObject = null;
         }
+    }
+
+    private static boolean isWin(ArrayList<checkersCharacterSprite> pieces, boolean blackTurn) {
+        for (checkersCharacterSprite sprite : pieces) {
+            if (blackTurn && sprite.isBlack()) {
+                return false;
+            } else if (!blackTurn && !sprite.isBlack()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int[] moveIfPossible(ArrayList<checkersCharacterSprite> pieces, checkersCharacterSprite selectedObject, boolean blackTurn, int[] destination) {
+        int[] result = new int[]{0, 0};
+        for (checkersCharacterSprite sprite : pieces) {
+            if (sprite.isColliding(destination[0] * checkersCharacterSprite.size, destination[1] * checkersCharacterSprite.size)) {
+                if (blackTurn) {
+                    if (sprite.isBlack()) {
+                        return result;
+                    }
+                } else {
+                    if (!sprite.isBlack()) {
+                        return result;
+                    }
+                }
+                int[] origin = new int[]{selectedObject.getX(), selectedObject.getY()};
+                if(takeIfPossible(pieces, origin, destination)[0] != 0) {
+                    result[1] = sprite.getPoints();
+                    pieces.remove(sprite);
+                    // not clean, but ill take it
+                    selectedObject.setX(takeIfPossible(pieces, origin, destination)[0] * checkersCharacterSprite.size);
+                    selectedObject.setY(takeIfPossible(pieces, origin, destination)[1] * checkersCharacterSprite.size);
+                    selectedObject.setMoved();
+                    result[0] = 1;
+                    return result;
+                }
+                break;
+            }
+            selectedObject.setX(destination[0] * checkersCharacterSprite.size);
+            selectedObject.setY(destination[0] * checkersCharacterSprite.size);
+            selectedObject.setMoved();
+            result[0] = 1;
+            return result;
+        }
+
+        selectedObject.setX(destination[0] * checkersCharacterSprite.size);
+        selectedObject.setY(destination[1] * checkersCharacterSprite.size);
+        selectedObject.setMoved();
+        result[0] = 1;
+        return result;
+    }
+    // check if can tak, i.e is there space behind enemy piece in a diagonal way
+    private static int[] takeIfPossible(ArrayList<checkersCharacterSprite> pieces, int[] origin, int[] destination) {
+        int deltaX = origin[0] - destination[0];
+        int deltaY = origin[1] - destination[1];
+
+        for(checkersCharacterSprite checkers : pieces) {
+            if(checkers.getX() != destination[0] + deltaX) {
+                if(checkers.getY() != destination[1] + deltaY) {
+                    return new int[]{destination[0] + deltaX, destination[1] + deltaY};
+                }
+                // no room behind piece (X-axis)
+                return new int[]{0,0};
+            }
+            // no room behind piece (Y-axis)
+            return new int[]{0,0};
+        }
+        // this should not ever be called but ok Android Studio
+        return new int[]{0,0};
+    }
+
+    private static boolean anyObstacles(ArrayList<checkersCharacterSprite> pieces, int[] position, int[] destination,
+                                        com.example.andichess.checkers.moveMode mode, boolean inclusive) {
+        switch (mode) {
+            case REVERSE_DIAGONAL:
+            case DIAGONAL:
+                int i = destination[0], j = destination[1];
+                i += i > position[0] ? -1 : 1;
+                j += j > position[1] ? -1 : 1;
+
+                while (i != position[0]) {
+                    for (checkersCharacterSprite sprite : pieces) {
+                        if (sprite.isColliding(i * checkersCharacterSprite.size, j * checkersCharacterSprite.size)) {
+                            return true;
+                        }
+                    }
+
+                    i += i > position[0] ? -1 : 1;
+                    j += j > position[1] ? -1 : 1;
+                }
+                break;
+
+            default:
+                return true;
+        }
+
+        if (inclusive) {
+            for (checkersCharacterSprite sprite : pieces) {
+                if (sprite.isColliding(destination[0] * checkersCharacterSprite.size, destination[1] * checkersCharacterSprite.size)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private int abs(int i) {
+        return i >= 0 ? i : -i;
     }
 
     private static void updateText(boolean blackTurn, int[] points, Canvas canvas, Paint textPaint, boolean gameOn) {
         if (!gameOn) {
             canvas.drawText((blackTurn ? "Red" : "Black") + " Wins!",
-                    3* CharacterSprite.size, 13*CharacterSprite.size, textPaint);
+                    3 * CharacterSprite.size, 13 * CharacterSprite.size, textPaint);
             return;
         }
 
-        canvas.drawText("Move: " + ( blackTurn ? "Black" : "Red"), 3*CharacterSprite.size,
-                10*CharacterSprite.size, textPaint);
-        canvas.drawText("Points:", CharacterSprite.size, 11*CharacterSprite.size, textPaint);
-        canvas.drawText("Black: " + points[0], CharacterSprite.size, 12*CharacterSprite.size,
+        canvas.drawText("Move: " + (blackTurn ? "Black" : "Red"), 3 * CharacterSprite.size,
+                10 * CharacterSprite.size, textPaint);
+        canvas.drawText("Points:", CharacterSprite.size, 11 * CharacterSprite.size, textPaint);
+        canvas.drawText("Black: " + points[0], CharacterSprite.size, 12 * CharacterSprite.size,
                 textPaint);
-        canvas.drawText("Red: " + points[1], CharacterSprite.size, 13*CharacterSprite.size,
+        canvas.drawText("Red: " + points[1], CharacterSprite.size, 13 * CharacterSprite.size,
                 textPaint);
     }
 }
