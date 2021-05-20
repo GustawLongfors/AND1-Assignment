@@ -27,30 +27,26 @@
         android:id="@+id/buttonChess"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
         android:layout_marginStart="122dp"
-        android:layout_marginLeft="122dp"
-        android:layout_marginTop="510dp"
+        android:layout_marginTop="410dp"
+        android:layout_centerHorizontal="true"
         android:text="Standard Chess" />
 
     <Button
-        android:id="@+id/buttonTickTacToe"
+        android:id="@+id/buttonChessSP"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="165dp"
-        android:layout_marginLeft="165dp"
-        android:layout_marginTop="595dp"
-        android:text="Fast Chess" />
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/buttonCheckers"
+        android:text="Singleplayer Chess" />
+
 
     <Button
         android:id="@+id/buttonCheckers"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonChess"
+        android:layout_centerHorizontal="true"
         android:text="Checkers Lobby" />
 
     <Button

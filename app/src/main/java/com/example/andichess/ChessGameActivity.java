@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -33,7 +34,7 @@ public class ChessGameActivity extends AppCompatActivity {
 
     Chessboard chessboard;
 
-    FirebaseDatabase database;
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference chessRef;
 
     MediaPlayer musicBot;
@@ -45,11 +46,11 @@ public class ChessGameActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        chessboard = new Chessboard(this, sessionName);
-        setContentView(chessboard);
-        
-        musicBot = MediaPlayer.create(getApplicationContext(), R.raw.Music1CC0);
+        setContentView(new Chessboard(this, sessionName));
 
+        // this is where i would put my music, if it worked
+        //musicBot = MediaPlayer.create(getApplicationContext(), R.raw.Music1CC0);
+        /*
         t = true;
 
         if (sessionName.equals(playerName)) {
@@ -69,7 +70,10 @@ public class ChessGameActivity extends AppCompatActivity {
             Toast.makeText(ChessGameActivity.this, "Haha you are observer", Toast.LENGTH_LONG).show();
         }
 
+         */
+
         // disgusting piece of code but i cant figure out a different solution because head is hurt
+        /*
         while(t) {
             if(chessboard.whiteTurn) {
                 if(role.equals("white")) {
@@ -95,13 +99,10 @@ public class ChessGameActivity extends AppCompatActivity {
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             }
         }
+         */
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        musicBot.start();
-    }
+
 
     // probably useless code but i keep it because i like it
 

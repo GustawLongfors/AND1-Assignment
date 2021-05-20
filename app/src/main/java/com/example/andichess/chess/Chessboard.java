@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -16,8 +17,11 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
 import com.example.andichess.R;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 enum moveMode
 {
@@ -28,7 +32,7 @@ enum moveMode
 
 public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, View.OnTouchListener {
     private static String sessionName;
-    private static FirebaseDatabase database = FirebaseDatabase.getInstance();
+    private static FirebaseDatabase database;
     private final chessMainThread thread; // thread responsible for updating our screen
     private final ArrayList<CharacterSprite> board; // fields on a chessboard
     private final ArrayList<CharacterSprite> pieces;
@@ -57,6 +61,29 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
         textPaint.setTextSize(60);
 
         sessionName = sn;
+
+        database = FirebaseDatabase.getInstance();
+        DatabaseReference chessRef = database.getReference("chess/" + sessionName + "/chessMove");
+        chessRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // format - xOrigin,yOrigin/xDest,yDest
+                String value = snapshot.getValue(String.class);
+                if(!(value == null)){
+                    String[] values = value.split("/"); // 5,4/3,2/true -> [5,4][3,2][true]
+                    String[] originVal = values[0].split(",");
+                    String[] destVal = values[1].split(",");
+                    int[] origin = new int[]{Integer.parseInt(originVal[0]), Integer.parseInt(originVal[1])};
+                    int[] destination = new int[]{Integer.parseInt(destVal[0]), Integer.parseInt(destVal[1])};
+                    movePieceFromDB(origin, destination);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                //something something error
+            }
+        });
     }
 
     @Override
@@ -137,7 +164,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
     }
 
     public void sendMoveToDB(int[] position, int[] destination) {
-        String value = position[0] + "," + position[1] + "/" + destination[0] + "," + destination[1];
+        String value = position[0] + "," + position[1] + "/" + destination[0] + "," + destination[1] + "/" + String.valueOf(whiteTurn);
         DatabaseReference dataRef = database.getReference("chess/" + sessionName + "/chessMove");
         dataRef.setValue(value);
     }
@@ -236,6 +263,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                     if (destination[0] == position[0] && destination[1] == position[1] + 1) {
                         if (!anyObstacles(pieces, position, destination, moveMode.Y_AXIS, true)) {
                             selectedObject.setY(selectedObject.getY() + CharacterSprite.size);
+                            sendMoveToDB(position, destination);
 
                             // user can move black pawn one field
                             moved = true;
@@ -248,7 +276,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                             && destination[1] == position[1] + 2) {
                         if (!anyObstacles(pieces, position, destination, moveMode.Y_AXIS, true)) {
                             selectedObject.setY(selectedObject.getY() + CharacterSprite.size * 2);
-
+                            sendMoveToDB(position, destination);
                             // user can move black pawn two fields
                             moved = true;
                             selectedObject.setMoved();
@@ -261,6 +289,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                         int[] result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
                         moved = result[0] == 1;
                         points[whiteTurn ? 0 : 1] += result[1];
+                        sendMoveToDB(position, destination);
                     }
 
                     // promote to queen if reached the end of the board
@@ -279,6 +308,9 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                     if (destination[0] == position[0] && destination[1] == position[1] - 1) {
                         if (!anyObstacles(pieces, position, destination, moveMode.Y_AXIS, true)) {
                             selectedObject.setY(selectedObject.getY() - CharacterSprite.size);
+                            //int[] origin = new int[]{selectedObject.getX(), selectedObject.getY()};
+                            //int[] destinationDB= new int[]{selectedObject.getX() / CharacterSprite.size, selectedObject.getY() / CharacterSprite.size};
+                            sendMoveToDB(position, destination);
 
                             // user can move white pawn one field
                             moved = true;
@@ -291,7 +323,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                             && destination[1] == position[1] - 2) {
                         if (!anyObstacles(pieces, position, destination, moveMode.Y_AXIS, true)) {
                             selectedObject.setY(selectedObject.getY() - CharacterSprite.size * 2);
-
+                            sendMoveToDB(position, destination);
                             // user can move white pawn two fields
                             moved = true;
                             selectedObject.setMoved();
@@ -304,6 +336,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                         int[] result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
                         moved = result[0] == 1;
                         points[whiteTurn ? 0 : 1] += result[1];
+                        sendMoveToDB(position, destination);
                     }
 
                     // promote to queen if reached the end of the board
@@ -325,6 +358,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                             int[] result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
                             moved = result[0] == 1;
                             points[whiteTurn ? 0 : 1] += result[1];
+                            sendMoveToDB(position, destination);
                         }
 
                     }
@@ -334,6 +368,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                             int[] result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
                             moved = result[0] == 1;
                             points[whiteTurn ? 0 : 1] += result[1];
+                            sendMoveToDB(position, destination);
                         }
                     }
                     break;
@@ -352,6 +387,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                         int[] result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
                         moved = result[0] == 1;
                         points[whiteTurn ? 0 : 1] += result[1];
+                        sendMoveToDB(position, destination);
                     }
                     break;
                 }
@@ -363,6 +399,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                             int[] result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
                             moved = result[0] == 1;
                             points[whiteTurn ? 0 : 1] += result[1];
+                            sendMoveToDB(position, destination);
                         }
                     }
                     break;
@@ -426,6 +463,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                         int[] result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
                         moved = result[0] == 1;
                         points[whiteTurn ? 0 : 1] += result[1];
+                        sendMoveToDB(position, destination);
                     }
                     break;
                 }
@@ -452,6 +490,7 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                         int[] result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
                         moved = result[0] == 1;
                         points[whiteTurn ? 0 : 1] += result[1];
+                        sendMoveToDB(position, destination);
                     }
                     break;
                 }
@@ -618,54 +657,54 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
         CharacterSprite pieceToMove;
         int pointsToAdd;
         for (CharacterSprite sprite : pieces) {
-            if ((sprite.getX() * CharacterSprite.size) == position[0]) {
-                if ((sprite.getY() * CharacterSprite.size) == position[1]) {
+            if ((sprite.getX()) == position[0]) {
+                if ((sprite.getY()) == position[1]) {
                     pieceToMove = sprite;
-                    for (CharacterSprite sprite1 : pieces) {
-                        if ((sprite1.getX()) == destination[0]) {
-                            if ((sprite1.getY()) == destination[1]) {
-                                pointsToAdd = sprite1.getPoints();
-                                pieces.remove(sprite1);
-                                // move piece to new position
-                                pieceToMove.setX(destination[0]);
-                                pieceToMove.setY(destination[1]);
-                                pieceToMove.setMoved();
+                        if(pieceToMove.isWhite() && whiteTurn || pieceToMove.isWhite() && !whiteTurn) {
+                            for (CharacterSprite sprite1 : pieces) {
+                                if ((sprite1.getX()) == destination[0]) {
+                                    if ((sprite1.getY()) == destination[1]) {
+                                        pointsToAdd = sprite1.getPoints();
+                                        pieces.remove(sprite1);
+                                        // move piece to new position
+                                        pieceToMove.setX(destination[0] * CharacterSprite.size);
+                                        pieceToMove.setY(destination[1] * CharacterSprite.size);
+                                        pieceToMove.setMoved();
 
-                                if(pieceToMove.isWhite()) {
-                                    points[0] += pointsToAdd;
-                                    whiteTurn = false;
+                                        if (pieceToMove.isWhite()) {
+                                            points[0] += pointsToAdd;
+                                            whiteTurn = false;
+                                        }
+                                        // its black
+                                        else {
+                                            points[1] += pointsToAdd;
+                                            whiteTurn = true;
+                                        }
+                                    }
+                                    // no piece found to capture
+                                    else {
+                                        pieceToMove.setX(destination[0]);
+                                        pieceToMove.setY(destination[1]);
+                                        if (pieceToMove.isWhite()) {
+                                            whiteTurn = false;
+                                        } else {
+                                            whiteTurn = true;
+                                        }
+                                    }
                                 }
-                                // its black
+                                // no piece found to capture
                                 else {
-                                    points[1] += pointsToAdd;
-                                    whiteTurn = true;
-                                }
-                            }
-                            // no piece found to capture
-                            else {
-                                pieceToMove.setX(destination[0]);
-                                pieceToMove.setY(destination[1]);
-                                if(pieceToMove.isWhite()) {
-                                    whiteTurn = false;
-                                }
-                                else {
-                                    whiteTurn = true;
+                                    // move piece to new position
+                                    pieceToMove.setX(destination[0]);
+                                    pieceToMove.setY(destination[1]);
+                                    if (pieceToMove.isWhite()) {
+                                        whiteTurn = false;
+                                    } else {
+                                        whiteTurn = true;
+                                    }
                                 }
                             }
                         }
-                        // no piece found to capture
-                        else {
-                            // move piece to new position
-                            pieceToMove.setX(destination[0]);
-                            pieceToMove.setY(destination[1]);
-                            if(pieceToMove.isWhite()) {
-                                whiteTurn = false;
-                            }
-                            else {
-                                whiteTurn = true;
-                            }
-                        }
-                    }
                 }
             }
         }

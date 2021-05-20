@@ -1,0 +1,719 @@
+package com.example.andichess.chessSP;
+
+import android.content.Context;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
+import androidx.annotation.NonNull;
+
+import com.example.andichess.R;
+
+import java.util.ArrayList;
+
+enum moveMode
+{
+    DIAGONAL,
+    X_AXIS,
+    Y_AXIS
+}
+
+
+public class GameView extends SurfaceView implements SurfaceHolder.Callback, View.OnTouchListener
+{
+    private final MainThread thread; // thread responsible for updating our screen
+    private final ArrayList<CharacterSprite> board; // fields on a chessboard
+    private final ArrayList<CharacterSprite> pieces;
+    private final ArrayList<CharacterSprite> selected; // yellow tiles visible if field is selected
+    private CharacterSprite selectedObject; // currently selected piece
+    private boolean whiteTurn; // if true it's white player's turn
+    private final int[] points; // [0] = score white [1] = score black
+    private boolean gameOn; // if true chessboard responds to clicks
+    private final Paint textPaint; // text display style (size and colour)
+
+    public GameView(Context context)
+    {
+        super(context);
+        setOnTouchListener(this);
+        getHolder().addCallback(this);
+        board = new ArrayList<>();
+        pieces = new ArrayList<>();
+        selected = new ArrayList<>();
+        points = new int[]{0, 0};
+        thread = new MainThread(getHolder(), this);
+        setFocusable(true);
+        whiteTurn = true;
+        gameOn = true;
+        textPaint = new Paint();
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(60);
+    }
+
+    @Override
+    public void surfaceCreated(@NonNull SurfaceHolder holder)
+    {
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inScaled = false;
+
+
+
+        // create board
+        for (int x = 1; x <= 8; x++)
+        {
+            for (int y = 1; y <= 8; y++)
+            {
+                if ((x % 2 == 0 && y % 2 == 0) || (x % 2 == 1 && y % 2 == 1))
+                {
+                    board.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.field_green,
+                            o), 110*x, 110*y, objType.FIELD_WHITE));
+                }
+                else
+                {
+                    board.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.field_purple,
+                            o), 110*x, 110*y, objType.FIELD_BLACK));
+                }
+            }
+        }
+
+        // create pieces
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.rook_white, o),
+                110, 110*8, objType.ROOK_WHITE));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.rook_white, o),
+                110*8, 110*8, objType.ROOK_WHITE));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.knight_white, o),
+                110*2, 110*8, objType.KNIGHT_WHITE));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.knight_white, o),
+                110*7, 110*8, objType.KNIGHT_WHITE));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.bishop_white, o),
+                110*3, 110*8, objType.BISHOP_WHITE));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.bishop_white, o),
+                110*6, 110*8, objType.BISHOP_WHITE));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.king_white, o),
+                110*5, 110*8, objType.KING_WHITE));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.queen_white, o),
+                110*4, 110*8, objType.QUEEN_WHITE));
+
+        for (int x = 1; x <= 8; x++)
+        {
+            pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.pawn_white, o),
+                    110*x, 110*7, objType.PAWN_WHITE));
+        }
+
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.rook_black, o),
+                110, 110, objType.ROOK_BLACK));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.rook_black, o),
+                110*8, 110, objType.ROOK_BLACK));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.knight_black, o),
+                110*2, 110, objType.KNIGHT_BLACK));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.knight_black, o),
+                110*7, 110, objType.KNIGHT_BLACK));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.bishop_black, o),
+                110*3, 110, objType.BISHOP_BLACK));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.bishop_black, o),
+                110*6, 110, objType.BISHOP_BLACK));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.king_black, o),
+                110*5, 110, objType.KING_BLACK));
+        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.queen_black, o),
+                110*4, 110, objType.QUEEN_BLACK));
+
+        for (int x = 1; x <= 8; x++)
+        {
+            pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.pawn_black, o),
+                    110*x, 110*2, objType.PAWN_BLACK));
+        }
+
+        // create and hide selected tiles
+        for (int x = 1; x <= 8; x++)
+        {
+            for (int y = 1; y <= 8; y++)
+            {
+                selected.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(), R.drawable.field_selected,
+                        o),110*x, 110*y, objType.FIELD_SELECTED));
+                selected.get(selected.size()-1).setVisible(false);
+            }
+        }
+
+        thread.setRunning(true);
+        thread.start();
+    }
+
+    @Override
+    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) { }
+
+    @Override
+    public void surfaceDestroyed(@NonNull SurfaceHolder holder)
+    {
+        boolean retry = true;
+        while (retry)
+        {
+            try
+            {
+                thread.setRunning(false);
+                thread.join();
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            retry = false;
+        }
+    }
+
+    @Override
+    public void draw(Canvas canvas)
+    {
+        super.draw(canvas);
+        if (canvas != null)
+        {
+            for (CharacterSprite sprite: board)
+            {
+                sprite.draw(canvas);
+            }
+            for (CharacterSprite sprite: selected)
+            {
+                sprite.draw(canvas);
+            }
+            for (CharacterSprite sprite: pieces)
+            {
+                sprite.draw(canvas);
+            }
+            updateText(whiteTurn, points, canvas, textPaint, gameOn);
+        }
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event)
+    {
+        // if the game is over, there is no point in doing anything!
+        if (!gameOn) return false;
+
+        if (selectedObject != null)
+        {
+            // We clicked while having a piece already chosen, check if we can move here
+            CharacterSprite newSelectedObject = null;
+            for (CharacterSprite sprite: pieces)
+            {
+                if (sprite.isColliding((int) event.getX(), (int) event.getY()))
+                {
+                    // Newly selected object is another piece
+                    newSelectedObject = sprite;
+                    break;
+                }
+            }
+            if (newSelectedObject == null)
+            {
+                for (CharacterSprite sprite: board)
+                {
+                    if (sprite.isColliding((int) event.getX(), (int) event.getY()))
+                    {
+                        // Newly selected object is a field
+                        newSelectedObject = sprite;
+                        break;
+                    }
+                }
+            }
+            if (newSelectedObject == null)
+            {
+                for (CharacterSprite field: selected)
+                {
+                    if (field.isColliding(selectedObject.getX(), selectedObject.getY()))
+                    {
+                        // User touched outside the board, deselecting previous field and quitting
+                        field.setVisible(false);
+                        selectedObject = null;
+                        break;
+                    }
+                }
+                return false;
+            }
+
+            // position && destination == [x,y] coordinates list in range <1-8>
+            int[] position = {selectedObject.getX() / CharacterSprite.size, selectedObject.getY() / CharacterSprite.size};
+            int[] destination = {newSelectedObject.getX() / CharacterSprite.size,
+                    newSelectedObject.getY() / CharacterSprite.size};
+            boolean moved = false; // if true then a correct move was performed
+            boolean isSomethingInTheWay = false;
+
+            // board positions, xy
+            // 11 21 31 41 51 61 71 81
+            // 12 22 32 42 52 62 72 82
+            // 13 23 33 43 53 63 73 83
+            // 14 24 34 44 54 64 74 84
+            // 15 25 35 45 55 65 75 85
+            // 16 26 36 46 56 66 76 86
+            // 17 27 37 47 57 67 77 87
+            // 18 28 38 48 58 68 78 88
+
+            // pieces logic
+            switch (selectedObject.getType())
+            {
+                case PAWN_BLACK:
+                {
+                    // move forward
+                    if (destination[0] == position[0] && destination[1] == position[1] + 1)
+                    {
+                        if (!anyObstacles(pieces, position, destination, moveMode.Y_AXIS, true))
+                        {
+                            selectedObject.setY(selectedObject.getY() + CharacterSprite.size);
+
+                            // user can move black pawn one field
+                            moved = true;
+                            selectedObject.setMoved();
+                        }
+                    }
+
+                    // move forward two spaces
+                    else if (!selectedObject.didMove() && destination[0] == position[0]
+                            && destination[1] == position[1] + 2)
+                    {
+                        if (!anyObstacles(pieces, position, destination, moveMode.Y_AXIS, true))
+                        {
+                            selectedObject.setY(selectedObject.getY() + CharacterSprite.size * 2);
+
+                            // user can move black pawn two fields
+                            moved = true;
+                            selectedObject.setMoved();
+                        }
+                    }
+
+                    // capture
+                    else if ((destination[0] == position[0] - 1 && destination[1] == position[1] + 1)
+                            || (destination[0] == position[0] + 1 && destination[1] == position[1] + 1))
+                    {
+                        int []result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
+                        moved = result[0] == 1;
+                        points[whiteTurn ? 0 : 1] += result[1];
+                    }
+
+                    // promote to queen if reached the end of the board
+                    if (selectedObject.getY() == CharacterSprite.size * 8)
+                    {
+                        BitmapFactory.Options o = new BitmapFactory.Options();
+                        o.inScaled = false;
+                        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(),
+                                R.drawable.queen_black, o),selectedObject.getX(), 880, objType.QUEEN_BLACK, 1));
+                        pieces.remove(selectedObject);
+                    }
+                    break;
+                }
+
+                case PAWN_WHITE:
+                {
+                    // move forward
+                    if (destination[0] == position[0] && destination[1] == position[1] - 1)
+                    {
+                        if (!anyObstacles(pieces, position, destination, moveMode.Y_AXIS, true))
+                        {
+                            selectedObject.setY(selectedObject.getY() - CharacterSprite.size);
+
+                            // user can move white pawn one field
+                            moved = true;
+                            selectedObject.setMoved();
+                        }
+                    }
+
+                    // move forward two spaces
+                    else if (!selectedObject.didMove() && destination[0] == position[0]
+                            && destination[1] == position[1] - 2)
+                    {
+                        if (!anyObstacles(pieces, position, destination, moveMode.Y_AXIS, true))
+                        {
+                            selectedObject.setY(selectedObject.getY() - CharacterSprite.size * 2);
+
+                            // user can move white pawn two fields
+                            moved = true;
+                            selectedObject.setMoved();
+                        }
+                    }
+
+                    // capture
+                    else if ((destination[0] == position[0] - 1 && destination[1] == position[1] - 1)
+                            || (destination[0] == position[0] + 1 && destination[1] == position[1] - 1))
+                    {
+                        int []result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
+                        moved = result[0] == 1;
+                        points[whiteTurn ? 0 : 1] += result[1];
+                    }
+
+                    // promote to queen if reached the end of the board
+                    if (selectedObject.getY() == CharacterSprite.size)
+                    {
+                        BitmapFactory.Options o = new BitmapFactory.Options();
+                        o.inScaled = false;
+                        pieces.add(new CharacterSprite(BitmapFactory.decodeResource(getResources(),
+                                R.drawable.queen_white, o),selectedObject.getX(), 110, objType.QUEEN_WHITE, 1));
+                        pieces.remove(selectedObject);
+                    }
+                    break;
+                }
+
+                case ROOK_WHITE:
+                case ROOK_BLACK:
+                {
+                    // move on Y axis (up/down)
+                    if (destination[0] == position[0] && destination[1] != position[1])
+                    {
+                        if (!anyObstacles(pieces, position, destination, moveMode.Y_AXIS, false))
+                        {
+                            int []result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
+                            moved = result[0] == 1;
+                            points[whiteTurn ? 0 : 1] += result[1];
+                        }
+
+                    }
+                    // move on X axis (left/right)
+                    else if (destination[1] == position[1] && destination[0] != position[0])
+                    {
+                        if (!anyObstacles(pieces, position, destination, moveMode.X_AXIS, false))
+                        {
+                            int []result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
+                            moved = result[0] == 1;
+                            points[whiteTurn ? 0 : 1] += result[1];
+                        }
+                    }
+                    break;
+                }
+
+                case KNIGHT_BLACK:
+                case KNIGHT_WHITE:
+                {
+                    if ((destination[0] == position[0]-2 && destination[1] == position[1]-1)
+                            || (destination[0] == position[0]-2 && destination[1] == position[1]+1)
+                            || (destination[0] == position[0]-1 && destination[1] == position[1]+2)
+                            || (destination[0] == position[0]-1 && destination[1] == position[1]-2)
+                            || (destination[0] == position[0]+1 && destination[1] == position[1]-2)
+                            || (destination[0] == position[0]+1 && destination[1] == position[1]+2)
+                            || (destination[0] == position[0]+2 && destination[1] == position[1]-1)
+                            || (destination[0] == position[0]+2 && destination[1] == position[1]+1))
+                    {
+                        int []result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
+                        moved = result[0] == 1;
+                        points[whiteTurn ? 0 : 1] += result[1];
+                    }
+                    break;
+                }
+
+                case BISHOP_BLACK:
+                case BISHOP_WHITE:
+                {
+                    if (abs(destination[0] - position[0]) == abs(destination[1] - position[1]))
+                    {
+                        if (!anyObstacles(pieces, position, destination, moveMode.DIAGONAL, false))
+                        {
+                            int []result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
+                            moved = result[0] == 1;
+                            points[whiteTurn ? 0 : 1] += result[1];
+                        }
+                    }
+                    break;
+                }
+
+                case KING_BLACK:
+                case KING_WHITE:
+                {
+                    // castle
+                    if (!selectedObject.didMove() && (destination[0] == position[0]-4 && destination[1] == position[1])
+                            || (destination[0] == position[0]+3 && destination[1] == position[1]))
+                    {
+                        int o;
+                        // o-o-o
+                        if (destination[0] == position[0]-4)
+                        {
+                            o = -1;
+                        }
+                        // o-o
+                        else
+                        {
+                            o = 1;
+                        }
+
+                        for (int i = position[0] + o; i > destination[0]; i += o)
+                        {
+                            for (CharacterSprite sprite : pieces)
+                            {
+                                if (sprite.isColliding(i * CharacterSprite.size, destination[1] * CharacterSprite.size))
+                                {
+                                    isSomethingInTheWay = true;
+                                    break;
+                                }
+                            }
+                            if (isSomethingInTheWay)
+                            {
+                                break;
+                            }
+                        }
+
+                        if (!isSomethingInTheWay)
+                        {
+                            for (CharacterSprite sprite: pieces)
+                            {
+                                if (sprite.isColliding(destination[0]*CharacterSprite.size,
+                                        destination[1]*CharacterSprite.size))
+                                {
+                                    if (whiteTurn)
+                                    {
+                                       if (sprite.getType() != objType.ROOK_WHITE || sprite.didMove())
+                                       {
+                                           break;
+                                       }
+                                    }
+                                    else
+                                    {
+                                        if (sprite.getType() != objType.ROOK_BLACK || sprite.didMove())
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    selectedObject.setMoved();
+                                    moved = true;
+                                    sprite.setMoved();
+                                    if (o == -1)
+                                    {
+                                        selectedObject.setX(3* CharacterSprite.size);
+                                        sprite.setX(4*CharacterSprite.size);
+                                    }
+                                    else
+                                    {
+                                        selectedObject.setX(7*CharacterSprite.size);
+                                        sprite.setX(6*CharacterSprite.size);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+                    else if (abs(destination[0]-position[0]) == 1 || abs(destination[1]-position[1]) == 1)
+                    {
+                        int []result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
+                        moved = result[0] == 1;
+                        points[whiteTurn ? 0 : 1] += result[1];
+                    }
+                    break;
+                }
+
+                case QUEEN_BLACK:
+                case QUEEN_WHITE:
+                {
+                    // move on Y axis
+                    if (destination[0] == position[0] && destination[1] != position[1])
+                    {
+                        isSomethingInTheWay = anyObstacles(pieces, position, destination, moveMode.Y_AXIS,
+                                false);
+                    }
+                    // move on X axis
+                    else if (destination[0] != position[0] && destination[1] == position[1])
+                    {
+                        isSomethingInTheWay = anyObstacles(pieces, position, destination, moveMode.X_AXIS,
+                                false);
+                    }
+                    // move diagonally
+                    else if (abs(destination[0] - position[0]) == abs(destination[1]  - position[1]))
+                    {
+                        isSomethingInTheWay = anyObstacles(pieces, position, destination, moveMode.DIAGONAL,
+                                false);
+                    }
+
+                    if (!isSomethingInTheWay)
+                    {
+                        int []result = moveIfPossible(pieces, selectedObject, whiteTurn, destination);
+                        moved = result[0] == 1;
+                        points[whiteTurn ? 0 : 1] += result[1];
+                    }
+                    break;
+                }
+            }
+
+            // Uncheck previous field
+            for (CharacterSprite field: selected)
+            {
+                field.setVisible(false);
+            }
+            // Switch players if the correct move was performed
+            if (moved)
+            {
+                whiteTurn = !whiteTurn;
+                // end game if mate
+                if (isMate(pieces, whiteTurn))
+                {
+                    gameOn = false;
+                }
+            }
+            // Deselect object
+            selectedObject = null;
+        }
+        else
+        {
+            // We clicked and we DO NOT have a piece already chosen
+            for (CharacterSprite sprite: pieces)
+            {
+                if (sprite.isWhite() == whiteTurn && sprite.isColliding((int)event.getX(), (int)event.getY()))
+                {
+                    selectedObject = sprite;
+                    for (CharacterSprite field: selected)
+                    {
+                        if (field.isColliding((int)event.getX(), (int)event.getY()))
+                        {
+                            field.setVisible(true);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private int abs(int i)
+    {
+        return i >= 0 ? i : -i;
+    }
+
+
+    private static boolean isMate(ArrayList<CharacterSprite> pieces, boolean whiteTurn)
+    {
+        for (CharacterSprite sprite: pieces)
+        {
+            if (whiteTurn && sprite.getType() == objType.KING_WHITE)
+            {
+                return false;
+            }
+            else if (!whiteTurn && sprite.getType() == objType.KING_BLACK)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // checks if any pieces are on the route, if inclusive is true it also checks for the destination field
+    private static boolean anyObstacles(ArrayList<CharacterSprite> pieces, int[] position, int[] destination,
+                                        moveMode mode, boolean inclusive)
+    {
+        switch (mode)
+        {
+            case X_AXIS:
+                int h = destination[0] < position[0] ? -1 : 1;
+                for (int i = position[0] + h; i != destination[0]; i += h)
+                {
+                    for (CharacterSprite sprite: pieces)
+                    {
+                        if (sprite.isColliding(i*CharacterSprite.size, position[1]*CharacterSprite.size))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                break;
+
+            case Y_AXIS:
+                h = destination[1] < position[1] ? -1 : 1;
+                for (int i = position[1] + h; i != destination[1]; i += h)
+                {
+                    for (CharacterSprite sprite: pieces)
+                    {
+                        if (sprite.isColliding(position[0]*CharacterSprite.size, i*CharacterSprite.size))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                break;
+
+            case DIAGONAL:
+                int i = destination[0], j = destination[1];
+                i += i > position[0] ? -1 : 1;
+                j += j > position[1] ? -1 : 1;
+
+                while (i != position[0])
+                {
+                    for (CharacterSprite sprite: pieces)
+                    {
+                        if (sprite.isColliding(i * CharacterSprite.size, j * CharacterSprite.size))
+                        {
+                            return true;
+                        }
+                    }
+
+                    i += i > position[0] ? -1 : 1;
+                    j += j > position[1] ? -1 : 1;
+                }
+                break;
+
+            default:
+                return true;
+        }
+
+        if (inclusive)
+        {
+            for (CharacterSprite sprite: pieces)
+            {
+                if (sprite.isColliding(destination[0]*CharacterSprite.size, destination[1]*CharacterSprite.size))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // moves piece if possible, if impossible returns [0, 0], else returns [1, points_taken]
+    private static int[] moveIfPossible(ArrayList<CharacterSprite> pieces, CharacterSprite selectedObject,
+                                        boolean whiteTurn, int[] destination)
+    {
+        int[] result = new int[]{0, 0};
+        for (CharacterSprite sprite: pieces)
+        {
+            if (sprite.isColliding(destination[0] * CharacterSprite.size,
+                    destination[1] * CharacterSprite.size))
+            {
+                if (whiteTurn)
+                {
+                    if (sprite.isWhite())
+                    {
+                        return result;
+                    }
+                }
+                else
+                {
+                    if (!sprite.isWhite())
+                    {
+                        return result;
+                    }
+                }
+                result[1] = sprite.getPoints();
+                pieces.remove(sprite);
+                break;
+            }
+        }
+
+        selectedObject.setX(destination[0] * CharacterSprite.size);
+        selectedObject.setY(destination[1] * CharacterSprite.size);
+        selectedObject.setMoved();
+        result[0] = 1;
+        return result;
+    }
+
+    private static void updateText(boolean whiteTurn, int[] points, Canvas canvas, Paint textPaint, boolean gameOn)
+    {
+        if (!gameOn)
+        {
+            canvas.drawText((whiteTurn ? "Black" : "White") + "Wins!",
+                    3*CharacterSprite.size, 13*CharacterSprite.size, textPaint);
+            return;
+        }
+
+        canvas.drawText("Turn: " + (whiteTurn ? "White" : "Black"), 3*CharacterSprite.size,
+            10*CharacterSprite.size, textPaint);
+        canvas.drawText("Points:", CharacterSprite.size, 11*CharacterSprite.size, textPaint);
+        canvas.drawText("White: " + points[0], CharacterSprite.size, 12*CharacterSprite.size,
+                textPaint);
+        canvas.drawText("Black: " + points[1], CharacterSprite.size, 13*CharacterSprite.size,
+                textPaint);
+    }
+}

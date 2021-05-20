@@ -15,8 +15,11 @@ import androidx.annotation.NonNull;
 import com.example.andichess.R;
 import com.example.andichess.chess.CharacterSprite;
 import com.example.andichess.chess.objType;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
@@ -26,17 +29,17 @@ enum moveMode {
 }
 
 public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback, View.OnTouchListener {
-    private checkersMainThread thread;
-    private ArrayList<checkersCharacterSprite> board; // fields on a chessboard
-    private ArrayList<checkersCharacterSprite> pieces;
-    private ArrayList<checkersCharacterSprite> selected; // yellow tiles visible if field is selected
+    private final checkersMainThread thread;
+    private final ArrayList<checkersCharacterSprite> board; // fields on a chessboard
+    private final ArrayList<checkersCharacterSprite> pieces;
+    private final ArrayList<checkersCharacterSprite> selected; // yellow tiles visible if field is selected
     private checkersCharacterSprite selectedObject; // currently selected piece
-    private boolean blackTurn; // if true it's black player's turn (black moves first)
-    private int[] points; // [0] = score white [1] = score black
-    private boolean gameOn; // if true chessboard responds to clicks
-    private Paint textPaint; // text display style (size and colour)
+    public boolean blackTurn; // if true it's black player's turn (black moves first)
+    private final int[] points; // [0] = score white [1] = score black
+    public boolean gameOn; // if true chessboard responds to clicks
+    private final Paint textPaint; // text display style (size and colour)
 
-    private static FirebaseDatabase database = FirebaseDatabase.getInstance();
+    private static final FirebaseDatabase database = FirebaseDatabase.getInstance();
     private static String sessionName;
 
     public Checkerboard(Context context, String sn) {
@@ -56,6 +59,29 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
         textPaint.setTextSize(60);
 
         sessionName = sn;
+
+        DatabaseReference checkersRef = database.getReference("checkers/" + sessionName + "/Move");
+        checkersRef .addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // format - xOrigin,yOrigin/xDest,yDest
+                String value = snapshot.getValue(String.class);
+                if(!(value == null)) {
+                    String[] values = value.split("/"); // 5,4/3,2/true -> [5,4][3,2][true]
+                    String[] originVal = values[0].split(",");
+                    String[] destVal = values[1].split(",");
+                    int[] origin = new int[]{Integer.parseInt(originVal[0]), Integer.parseInt(originVal[1])};
+                    int[] destination = new int[]{Integer.parseInt(destVal[0]), Integer.parseInt(destVal[1])};
+
+                    movePieceFromDB(origin, destination);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                //something something error
+            }
+        });
     }
 
     @Override
@@ -137,6 +163,12 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
 
     @Override
     public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
+    }
+
+    public void sendMoveToDB(int[] position, int[] destination) {
+        String value = position[0] + "," + position[1] + "/" + destination[0] + "," + destination[1] + "/" + String.valueOf(blackTurn);
+        DatabaseReference dataRef = database.getReference("checkers/" + sessionName + "/checkersMove");
+        dataRef.setValue(value);
     }
 
     @Override
@@ -331,12 +363,11 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
                     result[0] = 1;
 
                     String value = origin[0] + "," + origin[1] + "/" + (takeIfPossible(pieces, origin, destination)[0]) + "," + (takeIfPossible(pieces, origin, destination)[1]);
-                    DatabaseReference dataRef = database.getReference("chess/" + sessionName + "/chessMove");
+                    DatabaseReference dataRef = database.getReference("checkers/" + sessionName + "/checkersMove");
                     dataRef.setValue(value);
 
-                    return result;
+                    break;
                 }
-                break;
             }
             selectedObject.setX(destination[0] * checkersCharacterSprite.size);
             selectedObject.setY(destination[1] * checkersCharacterSprite.size);
@@ -345,7 +376,7 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
 
             int[] position = new int[]{selectedObject.getX(), selectedObject.getY()};
             String value = position[0] + "," + position[1] + "/" + (destination[0] * CharacterSprite.size) + "," + (destination[1] * CharacterSprite.size);
-            DatabaseReference dataRef = database.getReference("chess/" + sessionName + "/chessMove");
+            DatabaseReference dataRef = database.getReference("checkers/" + sessionName + "/checkersMove");
             dataRef.setValue(value);
 
             return result;
@@ -445,30 +476,43 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
             if ((sprite.getX() * CharacterSprite.size) == position[0]) {
                 if ((sprite.getY() * CharacterSprite.size) == position[1]) {
                     pieceToMove = sprite;
-                    int deltaX = (position[0] + destination[0])/2; // smol explanation - if were taking, its always a + a + 2 -> origin[3,6], destination[1,4], a = 1,4, middle square = a+1, if its a + a + 1 this will fail ( no pieces in a + 0.5 ever)
-                    int deltaY = (position[1] + destination[1])/2; // ^ same here ^
-                    for (checkersCharacterSprite sprite1 : pieces) {
-                        if ((sprite1.getX()) == deltaX) {
-                            if ((sprite1.getY()) == deltaY) { // if there is a sprite in the middle
-                                pointsToAdd = sprite1.getPoints();
-                                pieces.remove(sprite1);
-                                // move piece to new position
-                                pieceToMove.setX(destination[0]);
-                                pieceToMove.setY(destination[1]);
-                                pieceToMove.setMoved();
+                        int deltaX = (position[0] + destination[0])/2; // smol explanation - if were taking, its always a + a + 2 -> origin[3,6], destination[1,4], a = 1,4, middle square = a+1, if its a + a + 1 this will fail ( no pieces in a + 0.5 ever)
+                        int deltaY = (position[1] + destination[1])/2; // ^ same here ^
+                        for (checkersCharacterSprite sprite1 : pieces) {
+                            if ((sprite1.getX()) == deltaX) {
+                                if ((sprite1.getY()) == deltaY) { // if there is a sprite in the middle
+                                    pointsToAdd = sprite1.getPoints();
+                                    pieces.remove(sprite1);
+                                    // move piece to new position
+                                    pieceToMove.setX(destination[0]);
+                                    pieceToMove.setY(destination[1]);
+                                    pieceToMove.setMoved();
 
-                                if(pieceToMove.isBlack()) {
-                                    points[0] += pointsToAdd;
-                                    blackTurn = false;
+                                    if(pieceToMove.isBlack()) {
+                                        points[0] += pointsToAdd;
+                                        blackTurn = false;
+                                    }
+                                    // its black
+                                    else {
+                                        points[1] += pointsToAdd;
+                                        blackTurn = true;
+                                    }
                                 }
-                                // its black
+                                // no piece found to capture, we move 1
                                 else {
-                                    points[1] += pointsToAdd;
-                                    blackTurn = true;
+                                    pieceToMove.setX(destination[0]);
+                                    pieceToMove.setY(destination[1]);
+                                    if(pieceToMove.isBlack()) {
+                                        blackTurn = false;
+                                    }
+                                    else {
+                                        blackTurn = true;
+                                    }
                                 }
                             }
                             // no piece found to capture, we move 1
                             else {
+                                // move piece to new position
                                 pieceToMove.setX(destination[0]);
                                 pieceToMove.setY(destination[1]);
                                 if(pieceToMove.isBlack()) {
@@ -479,19 +523,7 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
                                 }
                             }
                         }
-                        // no piece found to capture, we move 1
-                        else {
-                            // move piece to new position
-                            pieceToMove.setX(destination[0]);
-                            pieceToMove.setY(destination[1]);
-                            if(pieceToMove.isBlack()) {
-                                blackTurn = false;
-                            }
-                            else {
-                                blackTurn = true;
-                            }
-                        }
-                    }
+
                 }
             }
         }

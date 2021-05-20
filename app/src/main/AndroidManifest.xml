@@ -10,11 +10,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ANDIChess">
         <activity android:name=".CheckersGameActivity"></activity>
-        <activity android:name=".TickTacToeGameActivity" />
         <activity android:name=".CheckersLobbyActivity" />
-        <activity android:name=".TickTacToeLobbyActivity" />
         <activity android:name=".ChessGameActivity" />
         <activity android:name=".ChessLobbyActivity" />
+        <activity android:name=".chessSP.ChessSPActivity"/>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

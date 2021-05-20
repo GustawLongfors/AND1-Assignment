@@ -48,7 +48,8 @@ public class ChessLobbyActivity extends AppCompatActivity {
 
         sessionList = new ArrayList<>();
 
-        musicBot = MediaPlayer.create(getApplicationContext(), R.raw.elevatorMusicCC0);
+        //it no work, because file not indentified
+        //musicBot = MediaPlayer.create(getApplicationContext(), R.raw.elevatorMusicCC0);
 
         buttonCreateLobby.setOnClickListener(new View.OnClickListener() {
             // create room and add yourself as player2
@@ -98,7 +99,7 @@ public class ChessLobbyActivity extends AppCompatActivity {
     }
 
     private void addSessionsEventListener() {
-        sessionsRef = database.getReference("sessions");
+        sessionsRef = database.getReference("chess/");
         sessionsRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -121,6 +122,6 @@ public class ChessLobbyActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        musicBot.start();
+        //musicBot.start();
     }
 }

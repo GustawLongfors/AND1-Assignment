@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.andichess.chessSP.ChessSPActivity;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -24,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     EditText edittext;
     Button buttonChessLobby;
-    Button buttonTickTacToeLobby;
+    Button buttonChessSP;
     Button buttonCheckersLobby;
     Button buttonConfirmName;
 
@@ -44,13 +45,14 @@ public class MainActivity extends AppCompatActivity {
         edittext = findViewById(R.id.edittext);
         buttonChessLobby = findViewById(R.id.buttonChess);
         buttonChessLobby.setEnabled(false);
-        buttonTickTacToeLobby = findViewById(R.id.buttonTickTacToe);
-        buttonTickTacToeLobby.setEnabled(false);
         buttonCheckersLobby = findViewById(R.id.buttonCheckers);
         buttonCheckersLobby.setEnabled(false);
+        buttonChessSP = findViewById(R.id.buttonChessSP);
+        buttonChessSP.setEnabled(false);
         buttonConfirmName = findViewById(R.id.buttonConfirmName);
 
-        musicBot = MediaPlayer.create(getApplicationContext(), R.raw.ambientElectronicCC0);
+        //this is where i would put my music, if it worked
+        //musicBot = MediaPlayer.create(getApplicationContext(), R.raw.ambientElectronicCC0);
 
         buttonConfirmName.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,26 +62,11 @@ public class MainActivity extends AppCompatActivity {
                     DatabaseReference playerRef = database.getReference();
                     playerRef.child("players").child(playerName).setValue(playerName);
                     buttonChessLobby.setEnabled(true);
-                    buttonTickTacToeLobby.setEnabled(true);
                     buttonCheckersLobby.setEnabled(true);
+                    buttonChessSP.setEnabled(true);
                     buttonConfirmName.setEnabled(false);
                     edittext.setEnabled(false);
                     Toast.makeText(MainActivity.this, "Success!", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-        buttonTickTacToeLobby.setOnClickListener(new View.OnClickListener() {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onClick(View v) {
-                playerName = edittext.getText().toString();
-                edittext.setText("");
-                if(!playerName.equals("")) {
-                    buttonTickTacToeLobby.setText("Joining Lobby Room");
-                    buttonTickTacToeLobby.setEnabled(false);
-                    databaseRef = database.getReference("players/" + playerName);
-                    addEventListener("ticktactoe");
-                    databaseRef.setValue("");
                 }
             }
         });
@@ -90,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
                 // logging in
                 playerName = edittext.getText().toString();
                 edittext.setText("");
-                if(!playerName.equals("")) {
+                if (!playerName.equals("")) {
                     buttonChessLobby.setText("Joining Lobby Room");
                     buttonChessLobby.setEnabled(false);
                     databaseRef = database.getReference("players/" + playerName);
@@ -115,6 +102,21 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        buttonChessSP.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playerName = edittext.getText().toString();
+                edittext.setText("");
+                if (!playerName.equals("")) {
+                    buttonCheckersLobby.setText("Joining ChessSP");
+                    buttonCheckersLobby.setEnabled(false);
+                    databaseRef = database.getReference("players/" + playerName);
+                    addEventListener("chessSP");
+                    databaseRef.setValue("");
+                }
+            }
+        });
     }
     private void addEventListener(String activity){
         databaseRef.addValueEventListener(new ValueEventListener() {
@@ -134,12 +136,12 @@ public class MainActivity extends AppCompatActivity {
                             startActivity(new Intent(getApplicationContext(), ChessLobbyActivity.class));
                             finish();
                             break;
-                        case "ticktactoe":
-                            startActivity(new Intent(getApplicationContext(), TickTacToeLobbyActivity.class));
-                            finish();
-                            break;
                         case "checkers":
                             startActivity(new Intent(getApplicationContext(), CheckersLobbyActivity.class));
+                            finish();
+                            break;
+                        case "chessSP":
+                            startActivity(new Intent(getApplicationContext(), ChessSPActivity.class));
                             finish();
                             break;
                         case "null":
@@ -180,6 +182,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        musicBot.start();
+        //musicBot.start();
     }
 }
