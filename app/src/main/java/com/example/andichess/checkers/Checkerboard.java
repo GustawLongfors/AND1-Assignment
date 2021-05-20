@@ -15,6 +15,8 @@ import androidx.annotation.NonNull;
 import com.example.andichess.R;
 import com.example.andichess.chess.CharacterSprite;
 import com.example.andichess.chess.objType;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 
@@ -34,7 +36,10 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
     private boolean gameOn; // if true chessboard responds to clicks
     private Paint textPaint; // text display style (size and colour)
 
-    public Checkerboard(Context context) {
+    private static FirebaseDatabase database = FirebaseDatabase.getInstance();
+    private static String sessionName;
+
+    public Checkerboard(Context context, String sn) {
         super(context);
         setOnTouchListener(this);
         getHolder().addCallback(this);
@@ -49,6 +54,8 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
         textPaint = new Paint();
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(60);
+
+        sessionName = sn;
     }
 
     @Override
@@ -272,6 +279,21 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
             // Deselect object
             selectedObject = null;
         }
+        else {
+            // We clicked and we DO NOT have a piece already chosen
+            for (checkersCharacterSprite sprite : pieces) {
+                if (sprite.isBlack() == blackTurn && sprite.isColliding((int) event.getX(), (int) event.getY())) {
+                    selectedObject = sprite;
+                    for (checkersCharacterSprite field : selected) {
+                        if (field.isColliding((int) event.getX(), (int) event.getY())) {
+                            field.setVisible(true);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private static boolean isWin(ArrayList<checkersCharacterSprite> pieces, boolean blackTurn) {
@@ -307,14 +329,25 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
                     selectedObject.setY(takeIfPossible(pieces, origin, destination)[1] * checkersCharacterSprite.size);
                     selectedObject.setMoved();
                     result[0] = 1;
+
+                    String value = origin[0] + "," + origin[1] + "/" + (takeIfPossible(pieces, origin, destination)[0]) + "," + (takeIfPossible(pieces, origin, destination)[1]);
+                    DatabaseReference dataRef = database.getReference("chess/" + sessionName + "/chessMove");
+                    dataRef.setValue(value);
+
                     return result;
                 }
                 break;
             }
             selectedObject.setX(destination[0] * checkersCharacterSprite.size);
-            selectedObject.setY(destination[0] * checkersCharacterSprite.size);
+            selectedObject.setY(destination[1] * checkersCharacterSprite.size);
             selectedObject.setMoved();
             result[0] = 1;
+
+            int[] position = new int[]{selectedObject.getX(), selectedObject.getY()};
+            String value = position[0] + "," + position[1] + "/" + (destination[0] * CharacterSprite.size) + "," + (destination[1] * CharacterSprite.size);
+            DatabaseReference dataRef = database.getReference("chess/" + sessionName + "/chessMove");
+            dataRef.setValue(value);
+
             return result;
         }
 
@@ -322,6 +355,12 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
         selectedObject.setY(destination[1] * checkersCharacterSprite.size);
         selectedObject.setMoved();
         result[0] = 1;
+
+        int[] position = new int[]{selectedObject.getX(), selectedObject.getY()};
+        String value = position[0] + "," + position[1] + "/" + (destination[0] * CharacterSprite.size) + "," + (destination[1] * CharacterSprite.size);
+        DatabaseReference dataRef = database.getReference("checkers/" + sessionName + "/checkersMove");
+        dataRef.setValue(value);
+
         return result;
     }
     // check if can tak, i.e is there space behind enemy piece in a diagonal way
@@ -344,8 +383,7 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
         return new int[]{0,0};
     }
 
-    private static boolean anyObstacles(ArrayList<checkersCharacterSprite> pieces, int[] position, int[] destination,
-                                        com.example.andichess.checkers.moveMode mode, boolean inclusive) {
+    private static boolean anyObstacles(ArrayList<checkersCharacterSprite> pieces, int[] position, int[] destination, moveMode mode, boolean inclusive) {
         switch (mode) {
             case REVERSE_DIAGONAL:
             case DIAGONAL:
@@ -398,6 +436,65 @@ public class Checkerboard extends SurfaceView implements SurfaceHolder.Callback,
                 textPaint);
         canvas.drawText("Red: " + points[1], CharacterSprite.size, 13 * CharacterSprite.size,
                 textPaint);
+    }
+
+    public void movePieceFromDB(int[] position, int[] destination) {
+        checkersCharacterSprite pieceToMove;
+        int pointsToAdd;
+        for (checkersCharacterSprite sprite : pieces) {
+            if ((sprite.getX() * CharacterSprite.size) == position[0]) {
+                if ((sprite.getY() * CharacterSprite.size) == position[1]) {
+                    pieceToMove = sprite;
+                    int deltaX = (position[0] + destination[0])/2; // smol explanation - if were taking, its always a + a + 2 -> origin[3,6], destination[1,4], a = 1,4, middle square = a+1, if its a + a + 1 this will fail ( no pieces in a + 0.5 ever)
+                    int deltaY = (position[1] + destination[1])/2; // ^ same here ^
+                    for (checkersCharacterSprite sprite1 : pieces) {
+                        if ((sprite1.getX()) == deltaX) {
+                            if ((sprite1.getY()) == deltaY) { // if there is a sprite in the middle
+                                pointsToAdd = sprite1.getPoints();
+                                pieces.remove(sprite1);
+                                // move piece to new position
+                                pieceToMove.setX(destination[0]);
+                                pieceToMove.setY(destination[1]);
+                                pieceToMove.setMoved();
+
+                                if(pieceToMove.isBlack()) {
+                                    points[0] += pointsToAdd;
+                                    blackTurn = false;
+                                }
+                                // its black
+                                else {
+                                    points[1] += pointsToAdd;
+                                    blackTurn = true;
+                                }
+                            }
+                            // no piece found to capture, we move 1
+                            else {
+                                pieceToMove.setX(destination[0]);
+                                pieceToMove.setY(destination[1]);
+                                if(pieceToMove.isBlack()) {
+                                    blackTurn = false;
+                                }
+                                else {
+                                    blackTurn = true;
+                                }
+                            }
+                        }
+                        // no piece found to capture, we move 1
+                        else {
+                            // move piece to new position
+                            pieceToMove.setX(destination[0]);
+                            pieceToMove.setY(destination[1]);
+                            if(pieceToMove.isBlack()) {
+                                blackTurn = false;
+                            }
+                            else {
+                                blackTurn = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

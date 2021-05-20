@@ -622,8 +622,8 @@ public class Chessboard extends SurfaceView implements SurfaceHolder.Callback, V
                 if ((sprite.getY() * CharacterSprite.size) == position[1]) {
                     pieceToMove = sprite;
                     for (CharacterSprite sprite1 : pieces) {
-                        if ((sprite1.getX() * CharacterSprite.size) == destination[0]) {
-                            if ((sprite1.getY() * CharacterSprite.size) == destination[1]) {
+                        if ((sprite1.getX()) == destination[0]) {
+                            if ((sprite1.getY()) == destination[1]) {
                                 pointsToAdd = sprite1.getPoints();
                                 pieces.remove(sprite1);
                                 // move piece to new position
