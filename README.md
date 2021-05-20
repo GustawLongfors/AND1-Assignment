@@ -1,5 +1,7 @@
 # AND1-Assignment
 
+// 230+ hours of work later, this still could be better, but its something and I have learned a lot about drawing on Android and logic
+
 Description
 
 I make a game, because i like making games. 
