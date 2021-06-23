@@ -23,7 +23,7 @@ The Project must include :
  - A functional chess game (main menu, chess view, majority of chess logic)
 
 The Project should include :
-- A matchmaking system via Firebase (dia via lobbies)
+- A matchmaking system via Firebase (done via lobbies)
 - Functional Checkers
 
 The Project could include :
